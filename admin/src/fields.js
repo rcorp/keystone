@@ -28,5 +28,7 @@ module.exports = {
 	text:             require('../../fields/types/text/TextField'),
 	textarea:         require('../../fields/types/textarea/TextareaField'),
 	textarray:        require('../../fields/types/textarray/TextArrayField'),
+	mediathumbnail:   require('../../fields/types/mediathumbnail/MediaThumbnailField'),
+	addmore: 		  require('../../fields/types/addmore/AddMoreField'),
 	url:              require('../../fields/types/url/UrlField')
 };
