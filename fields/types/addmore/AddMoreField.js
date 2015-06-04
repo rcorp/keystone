@@ -17,7 +17,9 @@ module.exports = Field.create({
 		return {
 			collapsedFields: {},
 			improve: false,
-			overwrite: false
+			overwrite: false,
+			count: [],
+			name: '',
 		};
 	},
 	
@@ -110,7 +112,7 @@ module.exports = Field.create({
 		
 	},
 	
-	XrenderVideoId: function() {
+	renderVideoId: function() {
 		console.log("this", this)
 		return (
 			<div className="row">
@@ -120,6 +122,22 @@ module.exports = Field.create({
 				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
 					<div className="col-xs-6">
 						<input type="text" name={this.props.path + '.videoId'} ref="videoId" onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
+					</div>
+				</div></div>
+			</div>
+		);
+	},
+
+	renderDynamicTextBoxId: function(item , ref) {
+		console.log("this", this)
+		return (
+			<div className="row">
+				<div className="col-sm-2 location-field-label">
+					<label className="text-muted">Video Id</label>
+				</div>
+				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
+					<div className="col-xs-6">
+						<input type="text" name={this.props.path + '.videoId'} value = {item} ref= {ref} onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
 					</div>
 				</div></div>
 			</div>
@@ -266,9 +284,22 @@ module.exports = Field.create({
 		//   }
 		// });
 	},
+    incrementCount: function(){
+    	console.log(this.refs)
+      var name = React.findDOMNode(this.refs.name).value.trim();
+      name = this.makeUpper(name);
+      this.state.count.push(name + " : " + this.state.count.length);
+      this.setState({
+        count: this.state.count,
+        name: name
+      });
+    },
+        makeUpper:function(name) {
+          return name.toLowerCase()
+        },
 
 	renderUI: function() {
-		
+		var _this = this;
 		if (!this.shouldRenderField()) {
 			return (
 				<div className="field field-type-location">
@@ -291,7 +322,15 @@ module.exports = Field.create({
 				<div className="field-ui">
 					<label>{this.props.label}</label>
 					{showMore}
-					{this.XrenderVideoId()}
+	                {
+	                  this.state.count.map(function(item, count) {
+	                    var _ref = "ref_" + count
+	                    return _this.renderDynamicTextBoxId(item, _ref)
+	                  })
+	                 }
+	                <input type="text" ref="name" />
+	                <button type="button" onClick={this.incrementCount}>Add More</button>
+					{this.renderVideoId()}
 					<Note note={this.props.note} />
 				</div>
 			</div>

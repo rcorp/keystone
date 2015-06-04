@@ -18,7 +18,6 @@ var _ = require('underscore'),
  */
 
 function Field(list, path, options) {
-
 	// Set field properties and options
 	this.list = list;
 	this._path = new Path(path);
@@ -27,6 +26,11 @@ function Field(list, path, options) {
 	this.type = this.constructor.name;
 	this.options = utils.options(this.defaults, options);
 	this.label = options.label || utils.keyToLabel(this.path);
+
+	if(options.group) {
+		this.group = options.group;
+		console.log(options, 'group')
+	}
 	this.typeDescription = options.typeDescription || this.typeDescription || this.type;
 
 	// Add the field to the schema
@@ -75,6 +79,7 @@ Field.prototype.getOptions = function() {
 			'paths',
 			'type',
 			'label',
+			'group',
 			'note',
 			'size',
 			'initial',

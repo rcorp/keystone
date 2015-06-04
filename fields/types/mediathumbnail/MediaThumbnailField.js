@@ -8,7 +8,6 @@ var _ = require('underscore'),
 	Field = require('../Field'),
 	Note = require('../../components/Note');
 
-var YouTube = require('youtube-node');
 
 module.exports = Field.create({
 	
@@ -241,7 +240,16 @@ module.exports = Field.create({
 	
 	requestYouTubeForThumbnail: function() {
 		this.setState({videoThumbnailSRC: 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'});
-		this.props.value.videoThumbnailSRC = 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'
+		this.props.value.videoThumbnailSRC = 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg';
+
+
+		// var request = require('request');
+		// request.get({
+		// 	url:'https://www.youtube.com/watch?v=AeOydbt9e6g',
+		// 	key:'AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU'
+		// }, function() {
+		// 	console.log(arguments)
+		// })
 
 		// var YouTube = require('youtube-node');
 
