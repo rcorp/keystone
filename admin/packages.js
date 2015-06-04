@@ -13,5 +13,6 @@ module.exports = [
 	'react-select',
 	'react-alt-text',
 	'react/addons',
-	'superagent'
+	'superagent',
+	'youtube-node'
 ];
