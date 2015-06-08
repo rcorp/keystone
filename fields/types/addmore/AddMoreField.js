@@ -325,7 +325,11 @@ module.exports = Field.create({
 					break;
 			}
 		}
+		var hrStyle = {
+			border:"10px double"
+		};
 
+		elements["line"] = <hr style={hrStyle}/>
 			// switch (_el.type) {
 			// 	case "Date":
 			// 	elements[_el.type] = React.createElement(DateField, _el)
