@@ -9,10 +9,18 @@ var _ = require('underscore'),
 	Fields = require('FieldTypes'),
 	Note = require('../../components/Note');
 
+var allFields = require('./fieldsRegistry')
+var DateField = allFields.Date
+var HTML = allFields.HTML
+var TextArea = allFields.TextArea
+var Text = allFields.Text
+
+
+
 module.exports = Field.create({
-	
+	// mixins:[test],
 	displayName: 'Add More',
-	
+	_values:{},
 	getInitialState: function() {
 		return {
 			collapsedFields: {},
@@ -20,23 +28,69 @@ module.exports = Field.create({
 			overwrite: false,
 			count: [],
 			name: '',
+			values:{},
+			groupvalues:{}
 		};
 	},
 	
 	componentWillMount: function() {
-		
-		var collapsedFields = {};
-		
-		// _.each(['number', 'name', 'videoThumbnailSRC', 'geo'], function(i) {
-		// 	if (!this.props.value[i]) {
-		// 		collapsedFields[i] = true;
-		// 	}
-		// }, this);
-		console.log("this.props.value", this.props.value)
+		var _value = '';
+		if(this.props.value && this.props.value['description']) {
+			_value = JSON.parse(this.props.value['description'])
+		}
+
+		var hashGroup = {};
+		for(var each in _value) {
+			var myRegexp = /ref_(\d+)/;
+			var match = myRegexp.exec(each);
+			if(hashGroup[match[1]]) {
+				hashGroup[match[1]].push(each)
+			} else {
+				hashGroup[match[1]] = [];
+				hashGroup[match[1]].push(each)
+			}
+		}
+
+		for(each in hashGroup) {
+			this.incrementCount();
+		}
 		this.setState({
 			videoThumbnailSRC: this.props.value.videoThumbnailSRC
 		});
 		
+	},
+	_findDOMNode:function(domNode, ref, value) {
+		if(domNode.children && domNode.children.length) {
+			for(var i=0;i<domNode.children.length;i++) {
+				var _dom = domNode.children[i]
+				if(_dom.name == ref) {
+					_dom.value = value;
+					return _dom;
+				} else {
+					this._findDOMNode(_dom, ref, value)
+				}
+			}
+		}
+	},
+	componentDidMount: function() {
+		
+		var _value = '';
+		if(this.props.value && this.props.value['description']) {
+			_value = JSON.parse(this.props.value['description'])
+		}
+		var _count = 0;
+		var _this = this;
+		// setTimeout(function() {
+			for(var each in _value) {
+				if(React.findDOMNode(_this.refs[each])) {
+					var _domNode = _this._findDOMNode(React.findDOMNode(_this.refs[each]), each, _value[each])
+					// _domNode.value = _value[each];
+					// if(React.findDOMNode(_this.refs[each]).children[0] && React.findDOMNode(_this.refs[each]).children[0].children[0]) {
+					// 	React.findDOMNode(_this.refs[each]).children[0].children[0].value = _value[each]
+					// }
+				}
+			}
+		// }, 1000)
 	},
 	
 	componentDidUpdate: function(prevProps, prevState) {
@@ -46,7 +100,7 @@ module.exports = Field.create({
 	},
 	
 	shouldCollapse: function() {
-		return this.formatValue() ? false : true;
+		return false //this.formatValue() ? false : true;
 	},
 	
 	uncollapseFields: function() {
@@ -56,7 +110,7 @@ module.exports = Field.create({
 	},
 	
 	fieldChanged: function(path, event) {
-		var value = this.props.value;
+		var value = this.props.value || {};
 		value[path] = event.target.value;
 		this.props.onChange({
 			path: this.props.path,
@@ -64,6 +118,37 @@ module.exports = Field.create({
 		});
 	},
 	
+	addMoreDataChanged: function(path, event) {
+		var value = this.props.value || {};
+		// value[path] = event.target.value;
+		// this.props.onChange({
+		// 	path: this.props.path,
+		// 	value: value
+		// });
+		var _obj = {};
+		// var _prevDescription = this.props.value.description || "{}"
+		// _prevDescription = JSON.parse(_prevDescription)
+		// for(var each in this.props.value) {
+		// 	if(each != "description") {
+		// 		_obj[each] = this.props.value[each]
+		// 	}
+		// }
+		// for(each in _prevDescription) {
+		// 	if(_obj[each] == undefined && each != "description") {
+		// 		_obj[each] = _prevDescription[each]
+		// 	}
+		// }
+
+		for(var each in this.refs) {
+			if(each != "description") {
+				_obj[each] = React.findDOMNode(this.refs[each]).value
+			}
+		}
+		this.setState({
+			description:JSON.stringify(_obj)
+		})
+	},
+
 	geoChanged: function(i, event) {
 		var value = this.props.value;
 		if (!value.geo) {
@@ -112,24 +197,7 @@ module.exports = Field.create({
 		
 	},
 	
-	renderVideoId: function() {
-		console.log("this", this)
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Video Id</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoId'} ref="videoId" onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
-
 	renderDynamicTextBoxId: function(item , ref) {
-		console.log("this", this)
 		return (
 			<div className="row">
 				<div className="col-sm-2 location-field-label">
@@ -137,27 +205,140 @@ module.exports = Field.create({
 				</div>
 				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
 					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoId'} value = {item} ref= {ref} onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
+						<input type="text" name={this.props.path + '.' + ref} ref= {ref} onChange={this.addMoreDataChanged.bind(this, ref)} className="form-control" placeholder="Video Id" />
 					</div>
 				</div></div>
 			</div>
 		);
 	},
-
-	renderMediaTitle: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Title</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.title'} ref="title" value={this.state.title || this.props.value.title} onChange={this.fieldChanged.bind(this, 'title')} className="form-control" placeholder="Title" />
-					</div>
-				</div></div>
-			</div>
-		)
+	getFieldProps: function(field) {
+		var props = _.clone(field);
+		props.value = this.state.values[field.path];
+		props.values = this.state.values;
+		props.onChange = this.handleChange;
+		props.mode = 'edit';
+		return props;
 	},
+	
+	handleChange: function(event) {
+		var values = this.state.values;
+		values[event.path] = event.value;
+
+		var _obj = this.state.groupvalues;
+		for(var each in this.refs) {
+			if(each != "description") {
+				if(each == event.path) {
+					this.state.groupvalues[each] = _obj[each] = event.value
+				}
+			}
+		}
+
+		this.setState({
+			description: JSON.stringify(this.state.groupvalues)
+		});
+	},
+
+	fieldChanged: function(path, event) {
+		var value = this.props.value;
+		value[path] = event.target.value;
+		this.props.onChange({
+			path: this.props.path,
+			value: value
+		});
+	},
+
+	renderGroupElements: function(item, ref) {
+		
+		var elements = {};
+
+		for(var each in this.props.group) {
+			var _el = this.props.group[each]
+			_el["ref"] = ref
+			// var props = _.clone(this.props);
+			switch (_el.type) {
+				case "Date":
+					var props = this.getFieldProps({
+						path:ref + _el.label
+					});
+					props["value"] = ''
+					props["ref"] = ref + _el.label
+					props["id"] = ref + _el.label
+					elements[_el.type] = React.createElement(DateField,  props)
+					// var props = this.getFieldProps({
+					// 	path:"Date"
+					// });
+					// props["ref"] = ref + _el.label
+					// props["onBlur"]=this.addMoreDataChanged.bind(this, props["ref"])
+					// _el["props"] = props
+					// elements[_el.type] = React.createElement(DateField, props)
+					// elements[_el.type] = React.createElement('DateField', {
+					// 	render: function() {
+					// 		return <DateField label = {ref + _el.label} name={this.props.path + '.' + ref} ref= {ref} />
+					// 	},
+					// 	valueChanged: function(value) {
+					// 		this.setDate(value);
+					// 		this.addMoreDataChanged(arguments)
+					// 	},
+					// })
+					// elements[_el.type] = <DateField label = "as" name={this.props.path + '.' + ref} ref= {ref} onChange={this.fieldChanged.bind(this, this.props.path + '.' + ref)}></DateField>
+					break;
+				case "String":
+					var props = this.getFieldProps({
+						path:ref + _el.label
+					});
+					props["value"] = ref + _el.label
+					props["ref"] = ref + _el.label
+					elements[_el.type] = React.createElement(Text,  props)
+
+					// var props = this.getFieldProps({
+					// 	path:"String"
+					// });
+					// props["ref"] = ref + _el.label
+					// _el["props"] = props
+					// // elements[_el.type] = React.createElement(Text,  props)
+					// // elements[_el.type] = React.createElement(Text, props)
+
+					// elements[_el.type] = <Text name={this.props.path + ref} onChange={this.fieldChanged.bind(this, ref)} />;	
+					// elements[_el.type] = React.createElement('Text', {
+					// 	render: function() {
+					// 		return <Text label = {ref + _el.label} name={this.props.path + '.' + ref} ref= {ref} />
+					// 	},
+					// 	valueChanged: function(event) {
+					// 		this.props.onChange({
+					// 			path: this.props.path,
+					// 			value: event.target.value
+					// 		});
+					// 		this.addMoreDataChanged(arguments)
+					// 	}
+					// })
+					// elements[_el.type] = <Text label="asf" name={this.props.path + '.' + ref} ref= {ref} ></Text>
+					break;
+				case "TextArea":
+					var props = this.getFieldProps({
+						path:ref + _el.label
+					});
+					props["value"] = ref + _el.label
+					props["ref"] = ref + _el.label
+					elements[_el.type] = React.createElement(TextArea,  props)
+					// elements[_el.type] = 						<input type="text" name={this.props.path + '.abcd'} ref="abcd" value={this.state.description || this.props.value.description} onChange={this.fieldChanged.bind(this, 'abcd')} className="form-control" placeholder="Description" />
+					// elements[_el.type] = <TextArea label="asf" name={this.props.path + '.' + ref} ref= {ref} onChange={this.fieldChanged}></TextArea>
+					break;
+			}
+		}
+
+			// switch (_el.type) {
+			// 	case "Date":
+			// 	elements[_el.type] = React.createElement(DateField, _el)
+			// 	break;
+			// 	case "String":
+			// 	elements[_el.type] = React.createElement(Text, _el)
+			// 	break;
+			// }
+		
+		return elements;
+		
+	},
+
 	renderMediaDescription: function() {
 		return (
 			<div className="row">
@@ -173,120 +354,9 @@ module.exports = Field.create({
 		)
 	},
 
-	renderMediaThumbnail: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Thumbnail</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoThumbnailSRC'} ref="videoThumbnailSRC" value={this.props.value.videoThumbnailSRC} onChange={this.fieldChanged.bind(this, 'videoThumbnailSRC')} className="form-control" placeholder="videoThumbnailSRC" />
-						<img name={this.props.path + '.videoThumbnailSRC_Display'} ref="videoThumbnailSRC_Display"  src={this.props.value.videoThumbnailSRC} value={this.props.value.videoThumbnailSRC} className="form-control" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
-	renderStateAndPostcode: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">State/Postcode</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.state'} ref="state" value={this.props.value.state} onChange={this.fieldChanged.bind(this, 'state')} className="form-control" placeholder="State" />
-					</div>
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.postcode'} ref="postcode" value={this.props.value.postcode} onChange={this.fieldChanged.bind(this, 'postcode')} className="form-control" placeholder="Postcode" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
-	
-	renderGeo: function() {
-		
-		if (this.state.collapsedFields.geo) {
-			return null;
-		}
-		
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Lat / Lng</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.paths.geo} ref="geo1" value={this.props.value.geo ? this.props.value.geo[1] : ''} onChange={this.geoChanged.bind(this, 1)} placeholder="Latitude" className="form-control" />
-					</div>
-					<div className="col-xs-6">
-						<input type="text" name={this.props.paths.geo} ref="geo0" value={this.props.value.geo ? this.props.value.geo[0] : ''} onChange={this.geoChanged.bind(this, 0)} placeholder="Longitude" className="form-control" />
-					</div>
-				</div></div>
-			</div>
-		);
-		
-	},
-	
-	updateGoogleOption: function(key, e) {
-		var newState = {};
-		newState[key] = e.target.checked;
-		this.setState(newState);
-	},
-	
-	renderGoogleOptions: function() {
-		if (!this.props.enableMapsAPI) return null;
-		var replace = this.state.improve ? (
-			<label className="checkbox overwrite" htmlFor={this.props.paths.overwrite}>
-				<input type="checkbox" name={this.props.paths.overwrite} id={this.props.paths.overwrite} value="true" onChange={this.updateGoogleOption.bind(this, 'overwrite')} checked={this.state.overwrite} />
-				Replace existing data
-			</label>
-		) : null;
-		return (
-			<div className="row">
-				<div className="col-sm-9 col-md-10 col-sm-offset-3 col-md-offset-2 improve-options">
-					<label className="checkbox autoimprove" htmlFor={this.props.paths.improve} title="When checked, this will attempt to fill missing fields. It will also get the lat/long">
-						<input type="checkbox" name={this.props.paths.improve} id={this.props.paths.improve} value="true" onChange={this.updateGoogleOption.bind(this, 'improve')} checked={this.state.improve} />
-						Autodetect and improve location on save
-					</label>
-					{replace}
-				</div>
-			</div>
-		);
-	},
-	
-	requestYouTubeForThumbnail: function() {
-		this.setState({videoThumbnailSRC: 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'});
-		this.props.value.videoThumbnailSRC = 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'
 
-		// var YouTube = require('youtube-node');
-
-		// var youTube = new YouTube();
-		// var _this = this;
-		// youTube.setKey('AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU');
-
-		// youTube.getById(event.target.value, function(error, result) {
-		//   if (error) {
-		//     console.log(error);
-		//   }
-		//   else {
-		//     if(result && result.items && result.items[0]) {
-		// 	    var _item = result.items[0]
-		// 	    if(_item.snippet) {
-		// 	    	console.log(_item.snippet)
-		// 			_this.setState({title: _item.snippet.title});
-		// 			_this.setState({description: _item.snippet.description});
-		// 	    }
-		//     }
-
-		//   }
-		// });
-	},
     incrementCount: function(){
-    	console.log(this.refs)
-      var name = React.findDOMNode(this.refs.name).value.trim();
+      var name = "dynamic_AddMore_";
       name = this.makeUpper(name);
       this.state.count.push(name + " : " + this.state.count.length);
       this.setState({
@@ -294,9 +364,9 @@ module.exports = Field.create({
         name: name
       });
     },
-        makeUpper:function(name) {
-          return name.toLowerCase()
-        },
+    makeUpper:function(name) {
+      return name.toLowerCase()
+    },
 
 	renderUI: function() {
 		var _this = this;
@@ -321,17 +391,14 @@ module.exports = Field.create({
 			<div className="field field-type-location">
 				<div className="field-ui">
 					<label>{this.props.label}</label>
-					{showMore}
 	                {
 	                  this.state.count.map(function(item, count) {
 	                    var _ref = "ref_" + count
-	                    return _this.renderDynamicTextBoxId(item, _ref)
+	                    return _this.renderGroupElements(item, _ref)
 	                  })
 	                 }
-	                <input type="text" ref="name" />
 	                <button type="button" onClick={this.incrementCount}>Add More</button>
-					{this.renderVideoId()}
-					<Note note={this.props.note} />
+					{this.renderMediaDescription()}
 				</div>
 			</div>
 		);
