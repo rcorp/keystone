@@ -35,8 +35,8 @@ module.exports = Field.create({
 	
 	componentWillMount: function() {
 		var _value = '';
-		if(this.props.value && this.props.value['description']) {
-			_value = JSON.parse(this.props.value['description'])
+		if(this.props.value && this.props.value['addmoredatafield']) {
+			_value = JSON.parse(this.props.value['addmoredatafield'])
 		}
 
 		var hashGroup = {};
@@ -73,10 +73,10 @@ module.exports = Field.create({
 		}
 	},
 	componentDidMount: function() {
-		
+		console.log("this", this)
 		var _value = '';
-		if(this.props.value && this.props.value['description']) {
-			_value = JSON.parse(this.props.value['description'])
+		if(this.props.value && this.props.value['addmoredatafield']) {
+			_value = JSON.parse(this.props.value['addmoredatafield'])
 		}
 		var _count = 0;
 		var _this = this;
@@ -99,118 +99,27 @@ module.exports = Field.create({
 		}
 	},
 	
-	shouldCollapse: function() {
-		return false //this.formatValue() ? false : true;
-	},
-	
+
 	uncollapseFields: function() {
 		this.setState({
 			collapsedFields: {}
 		});
 	},
 	
-	fieldChanged: function(path, event) {
-		var value = this.props.value || {};
-		value[path] = event.target.value;
-		this.props.onChange({
-			path: this.props.path,
-			value: value
-		});
-	},
-	
 	addMoreDataChanged: function(path, event) {
 		var value = this.props.value || {};
-		// value[path] = event.target.value;
-		// this.props.onChange({
-		// 	path: this.props.path,
-		// 	value: value
-		// });
 		var _obj = {};
-		// var _prevDescription = this.props.value.description || "{}"
-		// _prevDescription = JSON.parse(_prevDescription)
-		// for(var each in this.props.value) {
-		// 	if(each != "description") {
-		// 		_obj[each] = this.props.value[each]
-		// 	}
-		// }
-		// for(each in _prevDescription) {
-		// 	if(_obj[each] == undefined && each != "description") {
-		// 		_obj[each] = _prevDescription[each]
-		// 	}
-		// }
-
 		for(var each in this.refs) {
-			if(each != "description") {
+			if(each != "addmoredatafield") {
 				_obj[each] = React.findDOMNode(this.refs[each]).value
 			}
 		}
 		this.setState({
-			description:JSON.stringify(_obj)
+			addmoredatafield:JSON.stringify(_obj)
 		})
 	},
 
-	geoChanged: function(i, event) {
-		var value = this.props.value;
-		if (!value.geo) {
-			value.geo = ['', ''];
-		}
-		value.geo[i] = event.target.value;
-		this.props.onChange({
-			path: this.props.path,
-			value: value
-		});
-	},
-	
-	formatValue: function() {
-		return _.compact([
-			this.props.value.number,
-			this.props.value.name,
-			this.props.value.street1,
-			this.props.value.street2,
-			this.props.value.suburb,
-			this.props.value.state,
-			this.props.value.postcode,
-			this.props.value.country
-		]).join(', ');
-	},
-	
-	renderValue: function() {
-		return <div className="field-value">{this.formatValue() || '(no value)'}</div>;
-	},
-	
-	renderField: function(path, label, collapse) {//eslint-disable-line no-unused-vars
-		
-		if (this.state.collapsedFields[path]) {
-			return null;
-		}
-		
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">{label}</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls">
-					<input type="text" name={this.props.path + '.' + path} ref={path} value={this.props.value[path]} onChange={this.fieldChanged.bind(this, path)} className="form-control" />
-				</div>
-			</div>
-		);
-		
-	},
-	
-	renderDynamicTextBoxId: function(item , ref) {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Video Id</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.' + ref} ref= {ref} onChange={this.addMoreDataChanged.bind(this, ref)} className="form-control" placeholder="Video Id" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
+
 	getFieldProps: function(field) {
 		var props = _.clone(field);
 		props.value = this.state.values[field.path];
@@ -226,7 +135,7 @@ module.exports = Field.create({
 
 		var _obj = this.state.groupvalues;
 		for(var each in this.refs) {
-			if(each != "description") {
+			if(each != "addmoredatafield") {
 				if(each == event.path) {
 					this.state.groupvalues[each] = _obj[each] = event.value
 				}
@@ -234,7 +143,7 @@ module.exports = Field.create({
 		}
 
 		this.setState({
-			description: JSON.stringify(this.state.groupvalues)
+			addmoredatafield: JSON.stringify(this.state.groupvalues)
 		});
 	},
 
@@ -253,111 +162,55 @@ module.exports = Field.create({
 
 		for(var each in this.props.group) {
 			var _el = this.props.group[each]
-			_el["ref"] = ref
-			// var props = _.clone(this.props);
+			var props = this.getFieldProps({
+				path:ref + _el.name
+			});
+			props["ref"] = ref + _el.name
+			props["label"] = _el.label
+
 			switch (_el.type) {
 				case "Date":
-					var props = this.getFieldProps({
-						path:ref + _el.label
-					});
-					props["value"] = ''
-					props["ref"] = ref + _el.label
-					props["id"] = ref + _el.label
 					elements[_el.type] = React.createElement(DateField,  props)
-					// var props = this.getFieldProps({
-					// 	path:"Date"
-					// });
-					// props["ref"] = ref + _el.label
-					// props["onBlur"]=this.addMoreDataChanged.bind(this, props["ref"])
-					// _el["props"] = props
-					// elements[_el.type] = React.createElement(DateField, props)
-					// elements[_el.type] = React.createElement('DateField', {
-					// 	render: function() {
-					// 		return <DateField label = {ref + _el.label} name={this.props.path + '.' + ref} ref= {ref} />
-					// 	},
-					// 	valueChanged: function(value) {
-					// 		this.setDate(value);
-					// 		this.addMoreDataChanged(arguments)
-					// 	},
-					// })
-					// elements[_el.type] = <DateField label = "as" name={this.props.path + '.' + ref} ref= {ref} onChange={this.fieldChanged.bind(this, this.props.path + '.' + ref)}></DateField>
 					break;
 				case "String":
-					var props = this.getFieldProps({
-						path:ref + _el.label
-					});
-					props["value"] = ref + _el.label
-					props["ref"] = ref + _el.label
 					elements[_el.type] = React.createElement(Text,  props)
-
-					// var props = this.getFieldProps({
-					// 	path:"String"
-					// });
-					// props["ref"] = ref + _el.label
-					// _el["props"] = props
-					// // elements[_el.type] = React.createElement(Text,  props)
-					// // elements[_el.type] = React.createElement(Text, props)
-
-					// elements[_el.type] = <Text name={this.props.path + ref} onChange={this.fieldChanged.bind(this, ref)} />;	
-					// elements[_el.type] = React.createElement('Text', {
-					// 	render: function() {
-					// 		return <Text label = {ref + _el.label} name={this.props.path + '.' + ref} ref= {ref} />
-					// 	},
-					// 	valueChanged: function(event) {
-					// 		this.props.onChange({
-					// 			path: this.props.path,
-					// 			value: event.target.value
-					// 		});
-					// 		this.addMoreDataChanged(arguments)
-					// 	}
-					// })
-					// elements[_el.type] = <Text label="asf" name={this.props.path + '.' + ref} ref= {ref} ></Text>
 					break;
 				case "TextArea":
-					var props = this.getFieldProps({
-						path:ref + _el.label
-					});
-					props["value"] = ref + _el.label
-					props["ref"] = ref + _el.label
 					elements[_el.type] = React.createElement(TextArea,  props)
-					// elements[_el.type] = 						<input type="text" name={this.props.path + '.abcd'} ref="abcd" value={this.state.description || this.props.value.description} onChange={this.fieldChanged.bind(this, 'abcd')} className="form-control" placeholder="Description" />
-					// elements[_el.type] = <TextArea label="asf" name={this.props.path + '.' + ref} ref= {ref} onChange={this.fieldChanged}></TextArea>
+					break;
+				case "html":
+					props["wysiwyg"] = true;
+					elements[_el.type] = React.createElement(HTML,  props)
 					break;
 			}
 		}
+
+		/**
+		 * CSS Style for Horizontal Line
+		 * @type {Object}
+		 */
 		var hrStyle = {
 			border:"10px double"
 		};
-
 		elements["line"] = <hr style={hrStyle}/>
-			// switch (_el.type) {
-			// 	case "Date":
-			// 	elements[_el.type] = React.createElement(DateField, _el)
-			// 	break;
-			// 	case "String":
-			// 	elements[_el.type] = React.createElement(Text, _el)
-			// 	break;
-			// }
-		
 		return elements;
 		
 	},
 
-	renderMediaDescription: function() {
+	renderAddMoreHiddenDataField: function() {
 		return (
 			<div className="row">
 				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Description</label>
+					<label className="text-muted">Add More Data Field</label>
 				</div>
 				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
 					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.description'} ref="description" value={this.state.description || this.props.value.description} onChange={this.fieldChanged.bind(this, 'description')} className="form-control" placeholder="Description" />
+						<input type="text" name={this.props.path + '.addmoredatafield'} ref="addmoredatafield" value={this.state.addmoredatafield || this.props.value.addmoredatafield} onChange={this.fieldChanged.bind(this, 'addmoredatafield')} className="form-control" placeholder="Add More Data Field" />
 					</div>
 				</div></div>
 			</div>
 		)
 	},
-
 
     incrementCount: function(){
       var name = "dynamic_AddMore_";
@@ -374,23 +227,7 @@ module.exports = Field.create({
 
 	renderUI: function() {
 		var _this = this;
-		if (!this.shouldRenderField()) {
-			return (
-				<div className="field field-type-location">
-					<label className="field-label">{this.props.label}</label>
-					<div className="field-ui noedit">
-						{this.renderValue()}
-					</div>
-				</div>
-			);
-		}
-		
-		/* eslint-disable no-script-url */
-		var showMore = !_.isEmpty(this.state.collapsedFields)
-			? <a href="javascript:;" className="field-label-companion" onClick={this.uncollapseFields}>(show more fields)</a>
-			: null;
-		/* eslint-enable */
-		
+
 		return ( 
 			<div className="field field-type-location">
 				<div className="field-ui">
@@ -402,7 +239,7 @@ module.exports = Field.create({
 	                  })
 	                 }
 	                <button type="button" onClick={this.incrementCount}>Add More</button>
-					{this.renderMediaDescription()}
+					{this.renderAddMoreHiddenDataField()}
 				</div>
 			</div>
 		);

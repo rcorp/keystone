@@ -76,7 +76,7 @@ addmore.prototype.addToSchema = function() {
 		videoId: this._path.append('.videoId'),
 		videoThumbnailSRC: this._path.append('.videoThumbnailSRC'),
 		title: this._path.append('.title'),
-		description: this._path.append('.description'),
+		addmoredatafield: this._path.append('.addmoredatafield'),
 		suburb: this._path.append('.suburb'),
 		state: this._path.append('.state'),
 		videoThumbnail: this._path.append('.videoThumbnail'),
@@ -104,7 +104,7 @@ addmore.prototype.addToSchema = function() {
 		videoId: getFieldDef(String, 'videoId'),
 		videoThumbnailSRC: getFieldDef(String, 'videoThumbnailSRC'),
 		title: getFieldDef(String, 'title'),
-		description: getFieldDef(String, 'description'),
+		addmoredatafield: getFieldDef(String, 'addmoredatafield'),
 		street3: getFieldDef(String, 'street3'),
 		suburb: getFieldDef(String, 'suburb'),
 		state: getFieldDef(String, 'state'),
@@ -120,7 +120,7 @@ addmore.prototype.addToSchema = function() {
 			this.get(paths.videoId),
 			this.get(paths.videoThumbnailSRC),
 			this.get(paths.title),
-			this.get(paths.description),
+			this.get(paths.addmoredatafield),
 			this.get(paths.suburb),
 			this.get(paths.state),
 			this.get(paths.videoThumbnail),
@@ -183,7 +183,7 @@ addmore.prototype.isModified = function(item) {
 		item.isModified(this.paths.videoId) ||
 		item.isModified(this.paths.videoThumbnailSRC) ||
 		item.isModified(this.paths.title) ||
-		item.isModified(this.paths.description) ||
+		item.isModified(this.paths.addmoredatafield) ||
 		item.isModified(this.paths.suburb) ||
 		item.isModified(this.paths.state) ||
 		item.isModified(this.paths.videoThumbnail) ||
@@ -246,7 +246,7 @@ addmore.prototype.validateInput = function(data, required, item) {
 addmore.prototype.updateItem = function(item, data) {
 
 	var paths = this.paths,
-		fieldKeys = ['number', 'name', 'videoId', 'videoThumbnailSRC', 'title', 'description', 'suburb', 'state', 'videoThumbnail', 'country'],
+		fieldKeys = ['number', 'name', 'videoId', 'videoThumbnailSRC', 'title', 'addmoredatafield', 'suburb', 'state', 'videoThumbnail', 'country'],
 		geoKeys = ['geo', 'geo_lat', 'geo_lng'],
 		valueKeys = fieldKeys.concat(geoKeys),
 		valuePaths = valueKeys,
