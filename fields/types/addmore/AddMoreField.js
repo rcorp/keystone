@@ -40,6 +40,8 @@ module.exports = Field.create({
 		}
 
 		var hashGroup = {};
+		var havePreviousSavedValues = false;
+
 		for(var each in _value) {
 			var myRegexp = /ref_(\d+)/;
 			var match = myRegexp.exec(each);
@@ -52,8 +54,15 @@ module.exports = Field.create({
 		}
 
 		for(each in hashGroup) {
+			havePreviousSavedValues = true
 			this.incrementCount();
 		}
+		if(!havePreviousSavedValues) {
+			this.incrementCount();
+		}
+
+		this.state.groupvalues = _value
+
 		this.setState({
 			videoThumbnailSRC: this.props.value.videoThumbnailSRC
 		});
@@ -73,7 +82,6 @@ module.exports = Field.create({
 		}
 	},
 	componentDidMount: function() {
-		console.log("this", this)
 		var _value = '';
 		if(this.props.value && this.props.value['addmoredatafield']) {
 			_value = JSON.parse(this.props.value['addmoredatafield'])
@@ -132,12 +140,14 @@ module.exports = Field.create({
 	handleChange: function(event) {
 		var values = this.state.values;
 		values[event.path] = event.value;
-
 		var _obj = this.state.groupvalues;
 		for(var each in this.refs) {
+			var match = each.split(/ref_\d+/);
 			if(each != "addmoredatafield") {
 				if(each == event.path) {
 					this.state.groupvalues[each] = _obj[each] = event.value
+				// } else {
+				// 	this.state.groupvalues[each] = _obj[each] = this.state.groupvalues[each] || '';
 				}
 			}
 		}
@@ -156,8 +166,8 @@ module.exports = Field.create({
 		});
 	},
 
-	renderGroupElements: function(item, ref) {
-		
+	renderGroupElements: function(item, ref, index) {
+		index = index < 10 ? "0" + index : index;
 		var elements = {};
 
 		for(var each in this.props.group) {
@@ -167,20 +177,25 @@ module.exports = Field.create({
 			});
 			props["ref"] = ref + _el.name
 			props["label"] = _el.label
-
+			if(_el.value == '') {
+				props["value"] = index
+				this.state.groupvalues[props["ref"]] = index
+			} else if(_el.type == "Date") {
+				props["value"] = this.state.groupvalues[props["ref"]]
+			}
 			switch (_el.type) {
 				case "Date":
-					elements[_el.type] = React.createElement(DateField,  props)
+					elements[_el.name] = React.createElement(DateField,  props)
 					break;
 				case "String":
-					elements[_el.type] = React.createElement(Text,  props)
+					elements[_el.name] = React.createElement(Text,  props)
 					break;
 				case "TextArea":
-					elements[_el.type] = React.createElement(TextArea,  props)
+					elements[_el.name] = React.createElement(TextArea,  props)
 					break;
 				case "html":
 					props["wysiwyg"] = true;
-					elements[_el.type] = React.createElement(HTML,  props)
+					elements[_el.name] = React.createElement(HTML,  props)
 					break;
 			}
 		}
@@ -235,7 +250,7 @@ module.exports = Field.create({
 	                {
 	                  this.state.count.map(function(item, count) {
 	                    var _ref = "ref_" + count
-	                    return _this.renderGroupElements(item, _ref)
+	                    return _this.renderGroupElements(item, _ref, count + 1)
 	                  })
 	                 }
 	                <button type="button" onClick={this.incrementCount}>Add More</button>
