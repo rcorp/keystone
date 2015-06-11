@@ -33,6 +33,23 @@ module.exports = Field.create({
 			editor.on('blur', self.focusChanged.bind(self, false));
 		};
 
+		//TO create popoup for media library
+		_.extend(opts, {
+			file_browser_callback: function (fieldName, url, type, win) {
+				tinyMCE.activeEditor.windowManager.open({
+					file: '/keystone/select/galleries',
+					title: 'Hello World',
+					resizable: 'yes',
+					width: '1200',
+					height: '500'
+				}, {
+					window: win,
+					input: fieldName
+				})
+
+			}
+		})
+
 		this._currentValue = this.props.value;
 		tinymce.init(opts);
 	},
