@@ -251,28 +251,28 @@ module.exports = Field.create({
 		// 	console.log(arguments)
 		// })
 
-		// var YouTube = require('youtube-node');
+		var YouTube = require('youtube-node');
 
-		// var youTube = new YouTube();
-		// var _this = this;
-		// youTube.setKey('AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU');
+		var youTube = new YouTube();
+		var _this = this;
+		youTube.setKey('AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU');
 
-		// youTube.getById(event.target.value, function(error, result) {
-		//   if (error) {
-		//     console.log(error);
-		//   }
-		//   else {
-		//     if(result && result.items && result.items[0]) {
-		// 	    var _item = result.items[0]
-		// 	    if(_item.snippet) {
-		// 	    	console.log(_item.snippet)
-		// 			_this.setState({title: _item.snippet.title});
-		// 			_this.setState({description: _item.snippet.description});
-		// 	    }
-		//     }
+		youTube.getById(event.target.value, function(error, result) {
+		  if (error) {
+		    console.log(error);
+		  }
+		  else {
+		    if(result && result.items && result.items[0]) {
+			    var _item = result.items[0]
+			    if(_item.snippet) {
+			    	console.log(_item.snippet)
+					_this.setState({title: _item.snippet.title});
+					_this.setState({description: _item.snippet.description});
+			    }
+		    }
 
-		//   }
-		// });
+		  }
+		});
 	},
 
 	renderUI: function() {

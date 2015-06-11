@@ -176,6 +176,7 @@ var EditForm = React.createClass({
 		
 		if (!this.props.list.noedit) {
 			toolbar.save = <button type="submit" className="btn btn-save">Save</button>;
+			toolbar.preview = <a href={'/' + this.props.list.singular + '/' + this.props.data.slug} className="btn btn-link btn-save" >Preview Changes</a>;
 			// TODO: Confirm: Use React & Modal
 			toolbar.reset = <a href={'/keystone/' + this.props.list.path + '/' + this.props.data.id} className="btn btn-link btn-cancel" data-confirm="Are you sure you want to reset your changes?">reset changes</a>;
 		}

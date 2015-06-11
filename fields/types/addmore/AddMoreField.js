@@ -9,10 +9,18 @@ var _ = require('underscore'),
 	Fields = require('FieldTypes'),
 	Note = require('../../components/Note');
 
+var allFields = require('./fieldsRegistry')
+var DateField = allFields.Date
+var HTML = allFields.HTML
+var TextArea = allFields.TextArea
+var Text = allFields.Text
+
+
+
 module.exports = Field.create({
-	
+	// mixins:[test],
 	displayName: 'Add More',
-	
+	_values:{},
 	getInitialState: function() {
 		return {
 			collapsedFields: {},
@@ -20,23 +28,77 @@ module.exports = Field.create({
 			overwrite: false,
 			count: [],
 			name: '',
+			values:{},
+			groupvalues:{}
 		};
 	},
 	
 	componentWillMount: function() {
-		
-		var collapsedFields = {};
-		
-		// _.each(['number', 'name', 'videoThumbnailSRC', 'geo'], function(i) {
-		// 	if (!this.props.value[i]) {
-		// 		collapsedFields[i] = true;
-		// 	}
-		// }, this);
-		console.log("this.props.value", this.props.value)
+		var _value = '';
+		if(this.props.value && this.props.value['addmoredatafield']) {
+			_value = JSON.parse(this.props.value['addmoredatafield'])
+		}
+
+		var hashGroup = {};
+		var havePreviousSavedValues = false;
+
+		for(var each in _value) {
+			var myRegexp = /ref_(\d+)/;
+			var match = myRegexp.exec(each);
+			if(hashGroup[match[1]]) {
+				hashGroup[match[1]].push(each)
+			} else {
+				hashGroup[match[1]] = [];
+				hashGroup[match[1]].push(each)
+			}
+		}
+
+		for(each in hashGroup) {
+			havePreviousSavedValues = true
+			this.incrementCount();
+		}
+		if(!havePreviousSavedValues) {
+			this.incrementCount();
+		}
+
+		this.state.groupvalues = _value
+
 		this.setState({
 			videoThumbnailSRC: this.props.value.videoThumbnailSRC
 		});
 		
+	},
+	_findDOMNode:function(domNode, ref, value) {
+		if(domNode.children && domNode.children.length) {
+			for(var i=0;i<domNode.children.length;i++) {
+				var _dom = domNode.children[i]
+				if(_dom.name == ref) {
+					_dom.value = value;
+					return _dom;
+				} else {
+					this._findDOMNode(_dom, ref, value)
+				}
+			}
+		}
+	},
+	componentDidMount: function() {
+		var _value = '';
+		if(this.props.value && this.props.value['addmoredatafield']) {
+			_value = JSON.parse(this.props.value['addmoredatafield'])
+		}
+		var _count = 0;
+		var _this = this;
+		// setTimeout(function() {
+			for(var each in _value) {
+				if(React.findDOMNode(_this.refs[each])) {
+					var _domNode = _this._findDOMNode(React.findDOMNode(_this.refs[each]), each, _value[each])
+					// _domNode.value = _value[each];
+					// if(React.findDOMNode(_this.refs[each]).children[0] && React.findDOMNode(_this.refs[each]).children[0].children[0]) {
+					// 	React.findDOMNode(_this.refs[each]).children[0].children[0].value = _value[each]
+					// }
+				}
+			}
+		// }, 1000)
 	},
 	
 	componentDidUpdate: function(prevProps, prevState) {
@@ -45,16 +107,56 @@ module.exports = Field.create({
 		}
 	},
 	
-	shouldCollapse: function() {
-		return this.formatValue() ? false : true;
-	},
-	
+
 	uncollapseFields: function() {
 		this.setState({
 			collapsedFields: {}
 		});
 	},
 	
+	addMoreDataChanged: function(path, event) {
+		var value = this.props.value || {};
+		var _obj = {};
+		for(var each in this.refs) {
+			if(each != "addmoredatafield") {
+				_obj[each] = React.findDOMNode(this.refs[each]).value
+			}
+		}
+		this.setState({
+			addmoredatafield:JSON.stringify(_obj)
+		})
+	},
+
+
+	getFieldProps: function(field) {
+		var props = _.clone(field);
+		props.value = this.state.values[field.path];
+		props.values = this.state.values;
+		props.onChange = this.handleChange;
+		props.mode = 'edit';
+		return props;
+	},
+	
+	handleChange: function(event) {
+		var values = this.state.values;
+		values[event.path] = event.value;
+		var _obj = this.state.groupvalues;
+		for(var each in this.refs) {
+			var match = each.split(/ref_\d+/);
+			if(each != "addmoredatafield") {
+				if(each == event.path) {
+					this.state.groupvalues[each] = _obj[each] = event.value
+				// } else {
+				// 	this.state.groupvalues[each] = _obj[each] = this.state.groupvalues[each] || '';
+				}
+			}
+		}
+
+		this.setState({
+			addmoredatafield: JSON.stringify(this.state.groupvalues)
+		});
+	},
+
 	fieldChanged: function(path, event) {
 		var value = this.props.value;
 		value[path] = event.target.value;
@@ -63,230 +165,70 @@ module.exports = Field.create({
 			value: value
 		});
 	},
-	
-	geoChanged: function(i, event) {
-		var value = this.props.value;
-		if (!value.geo) {
-			value.geo = ['', ''];
+
+	renderGroupElements: function(item, ref, index) {
+		index = index < 10 ? "0" + index : index;
+		var elements = {};
+
+		for(var each in this.props.group) {
+			var _el = this.props.group[each]
+			var props = this.getFieldProps({
+				path:ref + _el.name
+			});
+			props["ref"] = ref + _el.name
+			props["label"] = _el.label
+			if(_el.value == '') {
+				props["value"] = index
+				this.state.groupvalues[props["ref"]] = index
+			} else if(_el.type == "Date") {
+				props["value"] = this.state.groupvalues[props["ref"]]
+			}
+			switch (_el.type) {
+				case "Date":
+					elements[_el.name] = React.createElement(DateField,  props)
+					break;
+				case "String":
+					elements[_el.name] = React.createElement(Text,  props)
+					break;
+				case "TextArea":
+					elements[_el.name] = React.createElement(TextArea,  props)
+					break;
+				case "html":
+					props["wysiwyg"] = true;
+					elements[_el.name] = React.createElement(HTML,  props)
+					break;
+			}
 		}
-		value.geo[i] = event.target.value;
-		this.props.onChange({
-			path: this.props.path,
-			value: value
-		});
-	},
-	
-	formatValue: function() {
-		return _.compact([
-			this.props.value.number,
-			this.props.value.name,
-			this.props.value.street1,
-			this.props.value.street2,
-			this.props.value.suburb,
-			this.props.value.state,
-			this.props.value.postcode,
-			this.props.value.country
-		]).join(', ');
-	},
-	
-	renderValue: function() {
-		return <div className="field-value">{this.formatValue() || '(no value)'}</div>;
-	},
-	
-	renderField: function(path, label, collapse) {//eslint-disable-line no-unused-vars
+
+		/**
+		 * CSS Style for Horizontal Line
+		 * @type {Object}
+		 */
+		var hrStyle = {
+			border:"10px double"
+		};
+		elements["line"] = <hr style={hrStyle}/>
+		return elements;
 		
-		if (this.state.collapsedFields[path]) {
-			return null;
-		}
-		
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">{label}</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls">
-					<input type="text" name={this.props.path + '.' + path} ref={path} value={this.props.value[path]} onChange={this.fieldChanged.bind(this, path)} className="form-control" />
-				</div>
-			</div>
-		);
-		
-	},
-	
-	renderVideoId: function() {
-		console.log("this", this)
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Video Id</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoId'} ref="videoId" onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
-					</div>
-				</div></div>
-			</div>
-		);
 	},
 
-	renderDynamicTextBoxId: function(item , ref) {
-		console.log("this", this)
+	renderAddMoreHiddenDataField: function() {
 		return (
 			<div className="row">
 				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Video Id</label>
+					<label className="text-muted">Add More Data Field</label>
 				</div>
 				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
 					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoId'} value = {item} ref= {ref} onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
-
-	renderMediaTitle: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Title</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.title'} ref="title" value={this.state.title || this.props.value.title} onChange={this.fieldChanged.bind(this, 'title')} className="form-control" placeholder="Title" />
-					</div>
-				</div></div>
-			</div>
-		)
-	},
-	renderMediaDescription: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Description</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.description'} ref="description" value={this.state.description || this.props.value.description} onChange={this.fieldChanged.bind(this, 'description')} className="form-control" placeholder="Description" />
+						<input type="text" name={this.props.path + '.addmoredatafield'} ref="addmoredatafield" value={this.state.addmoredatafield || this.props.value.addmoredatafield} onChange={this.fieldChanged.bind(this, 'addmoredatafield')} className="form-control" placeholder="Add More Data Field" />
 					</div>
 				</div></div>
 			</div>
 		)
 	},
 
-	renderMediaThumbnail: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Thumbnail</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoThumbnailSRC'} ref="videoThumbnailSRC" value={this.props.value.videoThumbnailSRC} onChange={this.fieldChanged.bind(this, 'videoThumbnailSRC')} className="form-control" placeholder="videoThumbnailSRC" />
-						<img name={this.props.path + '.videoThumbnailSRC_Display'} ref="videoThumbnailSRC_Display"  src={this.props.value.videoThumbnailSRC} value={this.props.value.videoThumbnailSRC} className="form-control" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
-	renderStateAndPostcode: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">State/Postcode</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.state'} ref="state" value={this.props.value.state} onChange={this.fieldChanged.bind(this, 'state')} className="form-control" placeholder="State" />
-					</div>
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.postcode'} ref="postcode" value={this.props.value.postcode} onChange={this.fieldChanged.bind(this, 'postcode')} className="form-control" placeholder="Postcode" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
-	
-	renderGeo: function() {
-		
-		if (this.state.collapsedFields.geo) {
-			return null;
-		}
-		
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Lat / Lng</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.paths.geo} ref="geo1" value={this.props.value.geo ? this.props.value.geo[1] : ''} onChange={this.geoChanged.bind(this, 1)} placeholder="Latitude" className="form-control" />
-					</div>
-					<div className="col-xs-6">
-						<input type="text" name={this.props.paths.geo} ref="geo0" value={this.props.value.geo ? this.props.value.geo[0] : ''} onChange={this.geoChanged.bind(this, 0)} placeholder="Longitude" className="form-control" />
-					</div>
-				</div></div>
-			</div>
-		);
-		
-	},
-	
-	updateGoogleOption: function(key, e) {
-		var newState = {};
-		newState[key] = e.target.checked;
-		this.setState(newState);
-	},
-	
-	renderGoogleOptions: function() {
-		if (!this.props.enableMapsAPI) return null;
-		var replace = this.state.improve ? (
-			<label className="checkbox overwrite" htmlFor={this.props.paths.overwrite}>
-				<input type="checkbox" name={this.props.paths.overwrite} id={this.props.paths.overwrite} value="true" onChange={this.updateGoogleOption.bind(this, 'overwrite')} checked={this.state.overwrite} />
-				Replace existing data
-			</label>
-		) : null;
-		return (
-			<div className="row">
-				<div className="col-sm-9 col-md-10 col-sm-offset-3 col-md-offset-2 improve-options">
-					<label className="checkbox autoimprove" htmlFor={this.props.paths.improve} title="When checked, this will attempt to fill missing fields. It will also get the lat/long">
-						<input type="checkbox" name={this.props.paths.improve} id={this.props.paths.improve} value="true" onChange={this.updateGoogleOption.bind(this, 'improve')} checked={this.state.improve} />
-						Autodetect and improve location on save
-					</label>
-					{replace}
-				</div>
-			</div>
-		);
-	},
-	
-	requestYouTubeForThumbnail: function() {
-		this.setState({videoThumbnailSRC: 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'});
-		this.props.value.videoThumbnailSRC = 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'
-
-		// var YouTube = require('youtube-node');
-
-		// var youTube = new YouTube();
-		// var _this = this;
-		// youTube.setKey('AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU');
-
-		// youTube.getById(event.target.value, function(error, result) {
-		//   if (error) {
-		//     console.log(error);
-		//   }
-		//   else {
-		//     if(result && result.items && result.items[0]) {
-		// 	    var _item = result.items[0]
-		// 	    if(_item.snippet) {
-		// 	    	console.log(_item.snippet)
-		// 			_this.setState({title: _item.snippet.title});
-		// 			_this.setState({description: _item.snippet.description});
-		// 	    }
-		//     }
-
-		//   }
-		// });
-	},
     incrementCount: function(){
-    	console.log(this.refs)
-      var name = React.findDOMNode(this.refs.name).value.trim();
+      var name = "dynamic_AddMore_";
       name = this.makeUpper(name);
       this.state.count.push(name + " : " + this.state.count.length);
       this.setState({
@@ -294,44 +236,25 @@ module.exports = Field.create({
         name: name
       });
     },
-        makeUpper:function(name) {
-          return name.toLowerCase()
-        },
+    makeUpper:function(name) {
+      return name.toLowerCase()
+    },
 
 	renderUI: function() {
 		var _this = this;
-		if (!this.shouldRenderField()) {
-			return (
-				<div className="field field-type-location">
-					<label className="field-label">{this.props.label}</label>
-					<div className="field-ui noedit">
-						{this.renderValue()}
-					</div>
-				</div>
-			);
-		}
-		
-		/* eslint-disable no-script-url */
-		var showMore = !_.isEmpty(this.state.collapsedFields)
-			? <a href="javascript:;" className="field-label-companion" onClick={this.uncollapseFields}>(show more fields)</a>
-			: null;
-		/* eslint-enable */
-		
+
 		return ( 
 			<div className="field field-type-location">
 				<div className="field-ui">
 					<label>{this.props.label}</label>
-					{showMore}
 	                {
 	                  this.state.count.map(function(item, count) {
 	                    var _ref = "ref_" + count
-	                    return _this.renderDynamicTextBoxId(item, _ref)
+	                    return _this.renderGroupElements(item, _ref, count + 1)
 	                  })
 	                 }
-	                <input type="text" ref="name" />
 	                <button type="button" onClick={this.incrementCount}>Add More</button>
-					{this.renderVideoId()}
-					<Note note={this.props.note} />
+					{this.renderAddMoreHiddenDataField()}
 				</div>
 			</div>
 		);
