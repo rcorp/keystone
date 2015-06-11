@@ -19,7 +19,7 @@ var RADIUS_KM = 6371,
  * @api public
  */
 
-function mediathumbnail(list, path, options) {
+function soundcloud(list, path, options) {
 
 	this._underscoreMethods = ['format', 'googleLookup', 'kmFrom', 'milesFrom'];
 	this._fixedSize = 'full';
@@ -45,10 +45,10 @@ function mediathumbnail(list, path, options) {
 	}
 	// default this.requiredPaths
 	if (!this.requiredPaths) {
-		this.requiredPaths = ['videoId', 'suburb'];
+		this.requiredPaths = ['soundId', 'suburb'];
 	}
 
-	mediathumbnail.super_.call(this, list, path, options);
+	soundcloud.super_.call(this, list, path, options);
 
 }
 
@@ -56,7 +56,7 @@ function mediathumbnail(list, path, options) {
  * Inherit from Field
  */
 
-util.inherits(mediathumbnail, super_);
+util.inherits(soundcloud, super_);
 
 
 /**
@@ -65,7 +65,7 @@ util.inherits(mediathumbnail, super_);
  * @api public
  */
 
-mediathumbnail.prototype.addToSchema = function() {
+soundcloud.prototype.addToSchema = function() {
 
 	var field = this,
 		schema = this.list.schema,
@@ -73,9 +73,9 @@ mediathumbnail.prototype.addToSchema = function() {
 
 	var paths = this.paths = {
 		number: this._path.append('.number'),
+		name: this._path.append('.name'),
+		soundId: this._path.append('.soundId'),
 		url: this._path.append('.url'),
-		videoId: this._path.append('.videoId'),
-		videoThumbnailSRC: this._path.append('.videoThumbnailSRC'),
 		title: this._path.append('.title'),
 		description: this._path.append('.description'),
 		suburb: this._path.append('.suburb'),
@@ -101,9 +101,9 @@ mediathumbnail.prototype.addToSchema = function() {
 	schema.nested[this.path] = true;
 	schema.add({
 		number: getFieldDef(String, 'number'),
+		name: getFieldDef(String, 'name'),
+		soundId: getFieldDef(String, 'soundId'),
 		url: getFieldDef(String, 'url'),
-		videoId: getFieldDef(String, 'videoId'),
-		videoThumbnailSRC: getFieldDef(String, 'videoThumbnailSRC'),
 		title: getFieldDef(String, 'title'),
 		description: getFieldDef(String, 'description'),
 		street3: getFieldDef(String, 'street3'),
@@ -117,9 +117,9 @@ mediathumbnail.prototype.addToSchema = function() {
 	schema.virtual(paths.serialised).get(function() {
 		return _.compact([
 			this.get(paths.number),
+			this.get(paths.name),
+			this.get(paths.soundId),
 			this.get(paths.url),
-			this.get(paths.videoId),
-			this.get(paths.videoThumbnailSRC),
 			this.get(paths.title),
 			this.get(paths.description),
 			this.get(paths.suburb),
@@ -155,7 +155,7 @@ mediathumbnail.prototype.addToSchema = function() {
  * @api public
  */
 
-mediathumbnail.prototype.format = function(item, values, delimiter) {
+soundcloud.prototype.format = function(item, values, delimiter) {
 
 	if (!values) {
 		return item.get(this.paths.serialised);
@@ -178,11 +178,11 @@ mediathumbnail.prototype.format = function(item, values, delimiter) {
  * @api public
  */
 
-mediathumbnail.prototype.isModified = function(item) {
+soundcloud.prototype.isModified = function(item) {
 	return item.isModified(this.paths.number) ||
+		item.isModified(this.paths.name) ||
+		item.isModified(this.paths.soundId) ||
 		item.isModified(this.paths.url) ||
-		item.isModified(this.paths.videoId) ||
-		item.isModified(this.paths.videoThumbnailSRC) ||
 		item.isModified(this.paths.title) ||
 		item.isModified(this.paths.description) ||
 		item.isModified(this.paths.suburb) ||
@@ -197,12 +197,12 @@ mediathumbnail.prototype.isModified = function(item) {
  * Validates that a value for this field has been provided in a data object
  *
  * options.required specifies an array or space-delimited list of paths that
- * are required (defaults to videoId, suburb)
+ * are required (defaults to soundId, suburb)
  *
  * @api public
  */
 
-mediathumbnail.prototype.validateInput = function(data, required, item) {
+soundcloud.prototype.validateInput = function(data, required, item) {
 
 	if (!required) {
 		return true;
@@ -244,10 +244,10 @@ mediathumbnail.prototype.validateInput = function(data, required, item) {
  * @api public
  */
 
-mediathumbnail.prototype.updateItem = function(item, data) {
+soundcloud.prototype.updateItem = function(item, data) {
 
 	var paths = this.paths,
-		fieldKeys = ['number', 'url', 'videoId', 'videoThumbnailSRC', 'title', 'description', 'suburb', 'state', 'videoThumbnail', 'country'],
+		fieldKeys = ['number', 'name', 'soundId', 'url', 'title', 'description', 'suburb', 'state', 'videoThumbnail', 'country'],
 		geoKeys = ['geo', 'geo_lat', 'geo_lng'],
 		valueKeys = fieldKeys.concat(geoKeys),
 		valuePaths = valueKeys,
@@ -307,7 +307,7 @@ mediathumbnail.prototype.updateItem = function(item, data) {
  * @api public
  */
 
-mediathumbnail.prototype.getRequestHandler = function(item, req, paths, callback) {
+soundcloud.prototype.getRequestHandler = function(item, req, paths, callback) {
 
 	var field = this;
 
@@ -343,7 +343,7 @@ mediathumbnail.prototype.getRequestHandler = function(item, req, paths, callback
  * @api public
  */
 
-mediathumbnail.prototype.handleRequest = function(item, req, paths, callback) {
+soundcloud.prototype.handleRequest = function(item, req, paths, callback) {
 	this.getRequestHandler(item, req, paths, callback)();
 };
 
@@ -413,7 +413,7 @@ function doGoogleGeocodeRequest(address, region, callback) {
  * @api private
  */
 
-mediathumbnail.prototype.googleLookup = function(item, region, update, callback) {
+soundcloud.prototype.googleLookup = function(item, region, update, callback) {
 
 	if (_.isFunction(update)) {
 		callback = update;
@@ -444,30 +444,30 @@ mediathumbnail.prototype.googleLookup = function(item, region, update, callback)
 
 		_.each(result.address_components, function(val){
 			if ( _.indexOf(val.types, 'street_number') >= 0 ) {
-				location.videoId = location.videoId || [];
-				location.videoId.push(val.long_url);
+				location.soundId = location.soundId || [];
+				location.soundId.push(val.long_name);
 			}
 			if ( _.indexOf(val.types, 'route') >= 0 ) {
-				location.videoId = location.videoId || [];
-				location.videoId.push(val.short_url);
+				location.soundId = location.soundId || [];
+				location.soundId.push(val.short_name);
 			}
 			// in some cases, you get suburb, city as locality - so only use the first
 			if ( _.indexOf(val.types, 'locality') >= 0 && !location.suburb) {
-				location.suburb = val.long_url;
+				location.suburb = val.long_name;
 			}
 			if ( _.indexOf(val.types, 'administrative_area_level_1') >= 0 ) {
-				location.state = val.short_url;
+				location.state = val.short_name;
 			}
 			if ( _.indexOf(val.types, 'country') >= 0 ) {
-				location.country = val.long_url;
+				location.country = val.long_name;
 			}
 			if ( _.indexOf(val.types, 'postal_code') >= 0 ) {
-				location.videoThumbnail = val.short_url;
+				location.videoThumbnail = val.short_name;
 			}
 		});
 
-		if (Array.isArray(location.videoId)) {
-			location.videoId = location.videoId.join(' ');
+		if (Array.isArray(location.soundId)) {
+			location.soundId = location.soundId.join(' ');
 		}
 
 		location.geo = [
@@ -532,7 +532,7 @@ function calculateDistance(point1, point2) {
  * @api public
  */
 
-mediathumbnail.prototype.kmFrom = function(item, point) {
+soundcloud.prototype.kmFrom = function(item, point) {
 	return calculateDistance(this.get(this.paths.geo), point) * RADIUS_KM;
 };
 
@@ -543,7 +543,7 @@ mediathumbnail.prototype.kmFrom = function(item, point) {
  * @api public
  */
 
-mediathumbnail.prototype.milesFrom = function(item, point) {
+soundcloud.prototype.milesFrom = function(item, point) {
 	return calculateDistance(this.get(this.paths.geo), point) * RADIUS_MILES;
 };
 
@@ -552,5 +552,5 @@ mediathumbnail.prototype.milesFrom = function(item, point) {
  * Export class
  */
 
-exports = module.exports = mediathumbnail;
+exports = module.exports = soundcloud;
 

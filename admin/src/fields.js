@@ -29,6 +29,7 @@ module.exports = {
 	textarea:         require('../../fields/types/textarea/TextareaField'),
 	textarray:        require('../../fields/types/textarray/TextArrayField'),
 	mediathumbnail:   require('../../fields/types/mediathumbnail/MediaThumbnailField'),
+	soundcloud:   	  require('../../fields/types/soundcloud/SoundCloudField'),
 	addmore: 		  require('../../fields/types/addmore/AddMoreField'),
 	url:              require('../../fields/types/url/UrlField')
 };

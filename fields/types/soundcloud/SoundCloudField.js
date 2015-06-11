@@ -11,7 +11,7 @@ var _ = require('underscore'),
 
 module.exports = Field.create({
 	
-	displayName: 'MediaThumbnailField',
+	displayName: 'SoundCloudField',
 	
 	getInitialState: function() {
 		return {
@@ -110,33 +110,19 @@ module.exports = Field.create({
 		
 	},
 	
-	renderVideoId: function() {
+	renderSoundId: function() {
 		return (
 			<div className="row">
 				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Video Id</label>
+					<label className="text-muted">Sound Id</label>
 				</div>
 				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
 					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoId'} ref="videoId" onBlur={this.requestYouTubeForThumbnail} value={this.props.value.videoId} onChange={this.fieldChanged.bind(this, 'videoId')} className="form-control" placeholder="Video Id" />
+						<input type="text" name={this.props.path + '.soundId'} ref="soundId" onBlur={this.requestYouTubeForThumbnail} value={this.props.value.soundId} onChange={this.fieldChanged.bind(this, 'soundId')} className="form-control" placeholder="Sound Id" />
 					</div>
 				</div></div>
 			</div>
 		);
-	},
-	renderMediaURL: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">URL</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.url'} ref="url" value={this.state.url || this.props.value.url} onChange={this.fieldChanged.bind(this, 'url')} className="form-control" placeholder="URL" />
-					</div>
-				</div></div>
-			</div>
-		)
 	},
 
 	renderMediaTitle: function() {
@@ -153,6 +139,21 @@ module.exports = Field.create({
 			</div>
 		)
 	},
+	renderMediaURL: function() {
+		return (
+			<div className="row">
+				<div className="col-sm-2 location-field-label">
+					<label className="text-muted">URL</label>
+				</div>
+				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
+					<div className="col-xs-6">
+						<input type="text" name={this.props.path + '.url'} ref="url" value={this.state.url || this.props.value.url} onChange={this.fieldChanged.bind(this, 'url')} className="form-control" placeholder="URL" />
+					</div>
+				</div></div>
+			</div>
+		)
+	},
+
 	renderMediaDescription: function() {
 		return (
 			<div className="row">
@@ -168,21 +169,6 @@ module.exports = Field.create({
 		)
 	},
 
-	renderMediaThumbnail: function() {
-		return (
-			<div className="row">
-				<div className="col-sm-2 location-field-label">
-					<label className="text-muted">Thumbnail</label>
-				</div>
-				<div className="col-sm-10 col-md-7 col-lg-6 location-field-controls"><div className="form-row">
-					<div className="col-xs-6">
-						<input type="text" name={this.props.path + '.videoThumbnailSRC'} ref="videoThumbnailSRC" value={this.props.value.videoThumbnailSRC} onChange={this.fieldChanged.bind(this, 'videoThumbnailSRC')} className="form-control" placeholder="videoThumbnailSRC" />
-						<img name={this.props.path + '.videoThumbnailSRC_Display'} ref="videoThumbnailSRC_Display"  src={this.props.value.videoThumbnailSRC} value={this.props.value.videoThumbnailSRC} className="form-control" />
-					</div>
-				</div></div>
-			</div>
-		);
-	},
 	renderStateAndPostcode: function() {
 		return (
 			<div className="row">
@@ -253,41 +239,21 @@ module.exports = Field.create({
 	},
 	
 	requestYouTubeForThumbnail: function() {
-		this.setState({videoThumbnailSRC: 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg'});
-		this.props.value.videoThumbnailSRC = 'http://img.youtube.com/vi/' + event.target.value + '/0.jpg';
-
-
-		// var request = require('request');
-		// request.get({
-		// 	url:'https://www.youtube.com/watch?v=AeOydbt9e6g',
-		// 	key:'AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU'
-		// }, function() {
-		// 	console.log(arguments)
-		// })
-
-		var YouTube = require('youtube-node');
-
-		var youTube = new YouTube();
 		var _this = this;
-		youTube.setKey('AIzaSyB1OOSpTREs85WUMvIgJvLTZKye4BVsoFU');
-
-		youTube.getById(event.target.value, function(error, result) {
-		  if (error) {
-		    console.log(error);
-		  }
-		  else {
-		    if(result && result.items && result.items[0]) {
-			    var _item = result.items[0]
-			    if(_item.snippet) {
-			    	console.log(result)
-					_this.setState({title: _item.snippet.title});
-					_this.setState({description: _item.snippet.description});
-					_this.setState({url: "https://www.youtube.com/watch?v=" + _item.id});
-			    }
-		    }
-
-		  }
+		SC.initialize({
+		    client_id: "d14d5115c7a230a6191028f607cad8e8",
+		    redirect_uri: "http://connect.soundcloud.com/examples/callback.html"
 		});
+// [soundcloud url="https://api.soundcloud.com/tracks/136949481" params="auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&visual=true" width="100%" height="450" iframe="true" /]
+		SC.get("/tracks/" + event.target.value, {}, function(tracks){
+			console.log(tracks)
+			_this.setState({title: tracks.title});
+			_this.setState({description: tracks.description});
+			_this.setState({url: tracks.uri});
+
+		    // do something with the result tracks
+		});
+
 	},
 
 	renderUI: function() {
@@ -314,8 +280,7 @@ module.exports = Field.create({
 				<div className="field-ui">
 					<label>{this.props.label}</label>
 					{showMore}
-					{this.renderVideoId()}
-					{this.renderMediaThumbnail()}
+					{this.renderSoundId()}
 					{this.renderMediaURL()}
 					{this.renderMediaTitle()}
 					{this.renderMediaDescription()}

@@ -27,6 +27,41 @@ module.exports = Field.create({
 	},
 	
 	componentDidMount: function() {
+		console.log(this.props.children)
+		// console.log(this, $(this.getDOMNode()).find(".Select-input"))
+		var _dom = this.getDOMNode().children
+		// for(var i=0;i<_dom.length;i++) {
+		// 	if(_dom[i].tagName == "DIV") {
+		// 		var _domSecond = _dom[i].children;
+		// 		for(var j=0;j<_domSecond.length;j++) {
+		// 			if(_domSecond[j].tagName == "DIV") {
+		// 				var _domThird = _domSecond[j].children
+		// 				for(var k=0;k<_domThird.length;k++) {
+		// 					if(_domThird[k].tagName == "DIV") {
+		// 						var _domFour = _domThird[k].children
+		// 						for(var l=0;l<_domFour.length;l++) {
+		// 							if(_domFour[k].tagName == "DIV") {
+		// 								var _domFive = _domFour[k].children
+		// 								for(var m=0;m<_domFive.length;m++) {
+		// 									console.log(_domFive[m].tagName)
+		// 									console.log(_domFive[m])
+		// 									if(_domFive[m].tagName == "INPUT") {
+		// 										console.log(_domFive[m])
+		// 										$(_domFive[m]).on("keypress", function() {
+		// 											console.log("adasdasd")
+		// 										});
+		// 										break;
+		// 									}
+		// 								}
+		// 							}
+		// 						}
+		// 					}
+		// 				}
+
+		// 			}
+		// 		}
+		// 	}
+		// }
 		this.loadValues(this.props.value);
 	},
 	
@@ -121,10 +156,10 @@ module.exports = Field.create({
 			.get('/keystone/api/' + this.props.refList.path + '/autocomplete?' + this.buildOptionQuery(input))
 			.set('Accept', 'application/json')
 			.end(function (err, res) {
+				console.log('asdsadas', input)
 				if (err) throw err;
 				
 				var data = res.body;
-				
 				callback(null, {
 					options: data.items.map(function (item) {
 						return {

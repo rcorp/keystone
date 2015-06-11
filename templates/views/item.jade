@@ -6,6 +6,8 @@ block css
 	if list.fieldTypes.code
 		link(rel='stylesheet', href='/keystone/js/lib/codemirror/codemirror.css')
 
+	script(src='http://connect.soundcloud.com/sdk.js')
+
 block js
 	script.
 		Keystone.list = !{JSON.stringify(list.getOptions())};
