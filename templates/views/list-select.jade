@@ -49,7 +49,29 @@ block js
 				}
 				top.tinymce.activeEditor.windowManager.close();
 			})
+
+			// $('.check').on('click', function (evt){
+			// 	console.log (Keystone);
+			// 	var args = top.tinymce.activeEditor.windowManager.getParams(),
+			// 		win = (args.window),
+			// 		input = (args.input)
+
+			// 	var _checkboxDOM = $(this)[0];
+			// 	console.log(_checkboxDOM, _checkboxDOM.parentElement)
+			// 	if(_checkboxDOM.parentElement && _checkboxDOM.parentElement.parentElement) {
+			// 		var _parentRowDOM = _checkboxDOM.parentElement.parentElement
+			// 		if(_parentRowDOM.children[3]) {
+			// 			if(_parentRowDOM.children[3].children[0]) {
+			// 				win.document.getElementById(input).value = _parentRowDOM.children[3].children[0].innerHTML.split(",")[0]
+			// 			}
+			// 		}
+			// 	}
+			// 	top.tinymce.activeEditor.windowManager.close();
+			// })
+
 		})
+
+
 	script(src='/keystone/js/packages.js')
 	script(src='/keystone/js/fields.js')
 	script(src='/keystone/js/list.js')
