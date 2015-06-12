@@ -70,6 +70,8 @@ addmore.prototype.addToSchema = function() {
 		schema = this.list.schema,
 		options = this.options;
 
+	// Follow this code structure for saving a field.
+	// Find and replaceAll it with your field name
 	var paths = this.paths = {
 		number: this._path.append('.number'),
 		name: this._path.append('.name'),

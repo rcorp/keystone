@@ -29,12 +29,13 @@ module.exports = Field.create({
 			count: [],
 			name: '',
 			values:{},
-			groupvalues:{}
+			groupvalues:{}	//variable used to store data of all dynamic widgets eg: ref0_name
 		};
 	},
 	
 	componentWillMount: function() {
 		var _value = '';
+		// get previously saved data for Add More Dynamic Fields
 		if(this.props.value && this.props.value['addmoredatafield']) {
 			_value = JSON.parse(this.props.value['addmoredatafield'])
 		}
@@ -42,6 +43,7 @@ module.exports = Field.create({
 		var hashGroup = {};
 		var havePreviousSavedValues = false;
 
+		// Separate and make group for each previously saved row
 		for(var each in _value) {
 			var myRegexp = /ref_(\d+)/;
 			var match = myRegexp.exec(each);
@@ -53,21 +55,21 @@ module.exports = Field.create({
 			}
 		}
 
+		// For each row create a new dynamic row
 		for(each in hashGroup) {
 			havePreviousSavedValues = true
 			this.incrementCount();
 		}
+
+		// If no previous data - Show atleast - one dynamic row
 		if(!havePreviousSavedValues) {
 			this.incrementCount();
 		}
 
 		this.state.groupvalues = _value
 
-		this.setState({
-			videoThumbnailSRC: this.props.value.videoThumbnailSRC
-		});
-		
 	},
+	// Not in use
 	_findDOMNode:function(domNode, ref, value) {
 		if(domNode.children && domNode.children.length) {
 			for(var i=0;i<domNode.children.length;i++) {
@@ -113,7 +115,7 @@ module.exports = Field.create({
 			collapsedFields: {}
 		});
 	},
-	
+	// Data change handler for Add More Dynamic FIelds
 	addMoreDataChanged: function(path, event) {
 		var value = this.props.value || {};
 		var _obj = {};
@@ -127,7 +129,7 @@ module.exports = Field.create({
 		})
 	},
 
-
+	// Code taken from keystone/admin/src/components/EditForm
 	getFieldProps: function(field) {
 		var props = _.clone(field);
 		props.value = this.state.values[field.path];
@@ -137,6 +139,7 @@ module.exports = Field.create({
 		return props;
 	},
 	
+	// Code taken from keystone/admin/src/components/EditForm
 	handleChange: function(event) {
 		var values = this.state.values;
 		values[event.path] = event.value;
@@ -166,23 +169,31 @@ module.exports = Field.create({
 		});
 	},
 
+	// Add Dynamic Fields to Add More Field 
 	renderGroupElements: function(item, ref, index) {
 		index = index < 10 ? "0" + index : index;
 		var elements = {};
 
 		for(var each in this.props.group) {
 			var _el = this.props.group[each]
+
+			// Code taken from keystone/admin/src/components/EditForm
 			var props = this.getFieldProps({
 				path:ref + _el.name
 			});
+			// Set ref and label
 			props["ref"] = ref + _el.name
 			props["label"] = _el.label
+
+			// For Sno - autoincrement, we must have defined a property - value as empty string ''
 			if(_el.value == '') {
 				props["value"] = index
 				this.state.groupvalues[props["ref"]] = index
+			// Auto populate Date Field
 			} else if(_el.type == "Date") {
 				props["value"] = this.state.groupvalues[props["ref"]]
 			}
+
 			switch (_el.type) {
 				case "Date":
 					elements[_el.name] = React.createElement(DateField,  props)
@@ -194,6 +205,7 @@ module.exports = Field.create({
 					elements[_el.name] = React.createElement(TextArea,  props)
 					break;
 				case "html":
+					// Always show - Tiny MCE editor
 					props["wysiwyg"] = true;
 					elements[_el.name] = React.createElement(HTML,  props)
 					break;
