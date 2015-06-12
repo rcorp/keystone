@@ -226,7 +226,7 @@ module.exports = Field.create({
 
 	renderAddMoreHiddenDataField: function() {
 		return (
-			<div className="row">
+			<div className="row hidden-md hidden-sm hidden-xs hidden-lg">
 				<div className="col-sm-2 location-field-label">
 					<label className="text-muted">Add More Data Field</label>
 				</div>
