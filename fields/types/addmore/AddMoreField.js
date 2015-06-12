@@ -66,7 +66,7 @@ module.exports = Field.create({
 			this.incrementCount();
 		}
 
-		this.state.groupvalues = _value
+		this.state.groupvalues = _value || {}
 
 	},
 	// Not in use
@@ -194,6 +194,7 @@ module.exports = Field.create({
 				props["value"] = this.state.groupvalues[props["ref"]]
 			}
 
+			elements["sno"] = <h3>SNo : {index}</h3>
 			switch (_el.type) {
 				case "Date":
 					elements[_el.name] = React.createElement(DateField,  props)
@@ -216,10 +217,10 @@ module.exports = Field.create({
 		 * CSS Style for Horizontal Line
 		 * @type {Object}
 		 */
-		var hrStyle = {
-			border:"10px double"
-		};
-		elements["line"] = <hr style={hrStyle}/>
+		// var hrStyle = {
+		// 	border:"10px double"
+		// };
+		elements["line"] = <hr/>
 		return elements;
 		
 	},
@@ -258,7 +259,6 @@ module.exports = Field.create({
 		return ( 
 			<div className="field field-type-location">
 				<div className="field-ui">
-					<label>{this.props.label}</label>
 	                {
 	                  this.state.count.map(function(item, count) {
 	                    var _ref = "ref_" + count
