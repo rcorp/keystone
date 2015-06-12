@@ -43,16 +43,7 @@ module.exports = Field.create({
 		}
 	},
 	
-	shouldCollapse: function() {
-		return this.formatValue() ? false : true;
-	},
-	
-	uncollapseFields: function() {
-		this.setState({
-			collapsedFields: {}
-		});
-	},
-	
+
 	fieldChanged: function(path, event) {
 		var value = this.props.value;
 		value[path] = event.target.value;
@@ -292,28 +283,10 @@ module.exports = Field.create({
 
 	renderUI: function() {
 		
-		if (!this.shouldRenderField()) {
-			return (
-				<div className="field field-type-location">
-					<label className="field-label">{this.props.label}</label>
-					<div className="field-ui noedit">
-						{this.renderValue()}
-					</div>
-				</div>
-			);
-		}
-		
-		/* eslint-disable no-script-url */
-		var showMore = !_.isEmpty(this.state.collapsedFields)
-			? <a href="javascript:;" className="field-label-companion" onClick={this.uncollapseFields}>(show more fields)</a>
-			: null;
-		/* eslint-enable */
-		
 		return ( 
 			<div className="field field-type-location">
 				<div className="field-ui">
 					<label>{this.props.label}</label>
-					{showMore}
 					{this.renderVideoId()}
 					{this.renderMediaThumbnail()}
 					{this.renderMediaURL()}
