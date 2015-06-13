@@ -276,7 +276,7 @@ cloudinaryimage.prototype.addToSchema = function() {
  */
 
 cloudinaryimage.prototype.format = function(item) {
-	return item.get(this.paths.url);
+	return '<img style="height:90px;" src=' + item.get(this.paths.url) +  '>';
 };
 
 
