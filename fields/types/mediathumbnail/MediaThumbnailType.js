@@ -145,6 +145,9 @@ mediathumbnail.prototype.addToSchema = function() {
 
 
 /**
+ *
+ * This function is ued to format the data to be displayed at List page
+ * 
  * Formats a list of the values stored by the field. Only paths that
  * have values will be included.
  *
