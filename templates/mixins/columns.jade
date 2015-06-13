@@ -36,6 +36,8 @@ mixin column(list, col, item)
 			+column_link(value, value, true)
 		else if col.type == 'color'
 			+column_color(value)
+		else if col.type == 'mediathumbnail'
+			+column_mediathumbnail(value)
 		else
 			+column_basic(value)
 
@@ -57,6 +59,9 @@ mixin column_html(value)
 
 mixin column_basic(value)
 	div.col-value= value
+
+mixin column_mediathumbnail(value)
+	div.col-value!= value
 
 mixin column_color(value)
 	div.col-value
