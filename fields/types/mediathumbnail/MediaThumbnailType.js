@@ -157,18 +157,22 @@ mediathumbnail.prototype.addToSchema = function() {
 
 mediathumbnail.prototype.format = function(item, values, delimiter) {
 
-	if (!values) {
-		return item.get(this.paths.serialised);
+	if(item.get(this.paths.videoThumbnailSRC)) {
+		return '<img style="height:90px;" src=' + item.get(this.paths.videoThumbnailSRC) +  '>'
+	} else {
+
+		if (!values) {
+			return item.get(this.paths.serialised);
+		}
+
+		var paths = this.paths;
+
+		values = values.split(' ').map(function(i) {
+			return item.get(paths[i]);
+		});
+
+		return _.compact(values).join(delimiter || ', ');
 	}
-
-	var paths = this.paths;
-
-	values = values.split(' ').map(function(i) {
-		return item.get(paths[i]);
-	});
-
-	return _.compact(values).join(delimiter || ', ');
-
 };
 
 
